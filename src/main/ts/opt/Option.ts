@@ -1,8 +1,8 @@
-export default interface Option<M, N extends keyof M> {
+export default interface Option {
   alias: string;
-  name: N;
-  type: new (...args: any[]) => M[N];
-  typeLabel: string;
+  name: string;
+  type: (input: string) => any;
+  typeLabel?: string;
   description: string;
   multiple?: boolean;
   defaultOption?: boolean;

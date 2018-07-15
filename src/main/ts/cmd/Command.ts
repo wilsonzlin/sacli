@@ -1,8 +1,8 @@
 import Option from "../opt/Option";
 
-export default interface Command<M> {
+export default interface Command {
   name: string;
   description: string;
-  options: ReadonlyArray<Option<M, keyof M>>;
-  action: (args: M) => any;
+  options: Option[];
+  action: (args: any) => any;
 }
