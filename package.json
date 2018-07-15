@@ -7,6 +7,12 @@
     "type": "git",
     "url": "git+https://github.com/wilsonzlin/sacli.git"
   },
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "test": "mocha -r ts-node/register src/test/**/*.spec.ts",
+    "prepublish": "npm run test && npm run build",
+    "clean": "rm -rf dist"
+  },
   "keywords": [
     "cli",
     "arg",
