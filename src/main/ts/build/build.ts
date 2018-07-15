@@ -2,7 +2,13 @@ import * as commandLineUsage from "command-line-usage";
 import CLI from "../cli/CLI";
 import Command from "../cmd/Command";
 
-const s_command = Symbol("command");
+    // Add `--help` option
+    command.options = [...command.options, {
+      alias: "h",
+      name: "help",
+      description: "Print this usage guide",
+      type: Boolean,
+    }];
 
 interface InternalCommandState {
   [subcommand: string]: InternalCommandState;
@@ -25,6 +31,15 @@ export default function build (cli: CLI) {
       }
       state = state[c];
     }
-    state[s_command] = com;
-  }
+  nodes.forEach(node => {
+    if (node.hasCommand()) {
+      node.setHelp(
+        build_command_help(
+          node.getCommand()!,
+          node.getSubcommands(),
+          cli.name,
+        )
+      );
+    }
+  });
 }
