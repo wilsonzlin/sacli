@@ -1,0 +1,50 @@
+{
+  "name": "sacli",
+  "version": "0.0.1",
+  "description": "Easy declarative CLI builder for Node.js applications",
+  "main": "dist/main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wilsonzlin/sacli.git"
+  },
+  "keywords": [
+    "cli",
+    "arg",
+    "args",
+    "command",
+    "line",
+    "option",
+    "options",
+    "argument",
+    "arguments",
+    "parameter",
+    "parameters"
+  ],
+  "author": {
+    "email": "contact@wilsonl.in",
+    "name": "Wilson Lin",
+    "url": "https://wilsonl.in/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wilsonzlin/sacli/issues"
+  },
+  "homepage": "https://github.com/wilsonzlin/sacli#readme",
+  "dependencies": {
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/command-line-args": "^5.0.0",
+    "@types/command-line-usage": "^5.0.1",
+    "@types/mocha": "^5.2.4",
+    "@types/node": "^10.5.2",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^5.2.0",
+    "ts-node": "^7.0.0",
+    "typescript": "^2.9.2"
+  }
+}
