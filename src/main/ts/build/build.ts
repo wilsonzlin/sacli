@@ -1,7 +1,13 @@
-import * as commandLineUsage from "command-line-usage";
 import CLI from "../cli/CLI";
-import Command from "../cmd/Command";
+import CommandTreeNode from "../cmd/CommandTreeNode";
+import build_command_help from "./build_command_help";
 
+export default function build (cli: CLI): CommandTreeNode {
+  // Build a tree of commands
+  let root_command = new CommandTreeNode();
+  let nodes = [root_command];
+
+  for (let command of cli.commands) {
     // Add `--help` option
     command.options = [...command.options, {
       alias: "h",
@@ -10,27 +16,35 @@ import Command from "../cmd/Command";
       type: Boolean,
     }];
 
-interface InternalCommandState {
-  [subcommand: string]: InternalCommandState;
-  [s_command]?: Command<any>;
-}
+    let command_name = command.name;
 
-export default function build (cli: CLI) {
-  let root_command: InternalCommandState = Object.create(null);
-  for (let com of cli.commands) {
-    let path = com.name.split(' ');
-    if (path.length < 1 || !path.every(c => /^[^\s\0]+$/y.test(c))) {
-      throw new SyntaxError(`"${com.name}" is not a valid command name`);
+    let components = command_name == "" ? [] : command_name.split(" ");
+    if (components.length > 0 && !components.every(c => /^[^\s\0]+$/u.test(c))) {
+      throw new SyntaxError(`"${command_name}" is not a valid command name`);
     }
-    let components = path.slice();
-    let state = root_command;
-    let c;
-    while (c = components.shift()) {
-      if (!state[c]) {
-        state[c] = Object.create(null);
+
+    let node = root_command;
+    let component;
+    while (component = components.shift()) {
+      if (!node.hasChild(component)) {
+        let child = new CommandTreeNode();
+        nodes.push(child);
+        node.addChild(component, child);
       }
-      state = state[c];
+
+      node = node.getChild(component)!;
     }
+
+    try {
+      node.setCommand(command);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        throw new ReferenceError(`Duplicate command "${command_name}"`);
+      }
+      throw e;
+    }
+  }
+
   nodes.forEach(node => {
     if (node.hasCommand()) {
       node.setHelp(
@@ -42,4 +56,6 @@ export default function build (cli: CLI) {
       );
     }
   });
+
+  return root_command;
 }
