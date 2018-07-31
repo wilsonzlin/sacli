@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "Easy declarative CLI builder for Node.js applications",
   "main": "dist/main.js",
+  "files": [
+    "dist/**"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wilsonzlin/sacli.git"
