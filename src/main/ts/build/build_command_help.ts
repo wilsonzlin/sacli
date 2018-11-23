@@ -61,8 +61,6 @@ function build_command_help_options (cmd: Command): commandLineUsage.Section {
 }
 
 export default function build_command_help (cmd: Command, subcommands: Command[], cliName?: string | undefined): string {
-  let help = [];
-
   let cliNamePrefix;
   if (cliName && cmd.name.length) {
     cliNamePrefix = cliName + " ";
@@ -72,10 +70,12 @@ export default function build_command_help (cmd: Command, subcommands: Command[]
     cliNamePrefix = "";
   }
 
-  help.push(build_command_help_header(cmd, cliNamePrefix));
-  help.push(build_command_help_usage(cmd, !!subcommands.length, cliNamePrefix));
-  help = help.concat(build_command_help_subcommands(cmd, subcommands, cliNamePrefix));
-  help.push(build_command_help_options(cmd));
+  const help = [
+    build_command_help_header(cmd, cliNamePrefix),
+    build_command_help_usage(cmd, !!subcommands.length, cliNamePrefix),
+    ...build_command_help_subcommands(cmd, subcommands, cliNamePrefix),
+    build_command_help_options(cmd),
+  ];
 
   return commandLineUsage(help);
 }

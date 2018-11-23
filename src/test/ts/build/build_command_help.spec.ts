@@ -2,19 +2,13 @@ import {expect} from "chai";
 import "mocha";
 import build_command_help from "../../../main/ts/build/build_command_help";
 
-interface CommitCommand {
-  message: string;
-}
-
-function normalise_terminal_text (text: string): string {
-  return text
-  // Trim whitespace
+const normalise_terminal_text = (text: string) =>
+  text
     .trim()
     // Collapse whitespace
     .replace(/\s+/g, " ")
     // Remove ANSI CSI sequence escape codes (mostly terminal colors and formatting)
     .replace(/\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]/g, "");
-}
 
 describe("build_command_help", () => {
   it("should generate correct help", () => {
@@ -30,7 +24,7 @@ describe("build_command_help", () => {
           typeLabel: "<msg>",
         },
       ],
-      action: (args: CommitCommand) => {
+      action: (args: any) => {
         console.log(args);
       },
     }, [
