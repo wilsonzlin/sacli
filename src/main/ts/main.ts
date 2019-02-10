@@ -1,6 +1,6 @@
-export {default as Option} from "./opt/Option";
-export {default as Command} from "./cmd/Command";
-export {default as CLI} from "./cli/CLI";
+export * from "./Option";
+export * from "./Command";
+export * from "./CLI";
 
-export {default as parse} from "./parse/parse";
-export {default as build} from "./build/build";
+export * from "./exec";
+export * from "./build";

@@ -1,6 +1,6 @@
-import Option from "../opt/Option";
+import {Option} from "./Option";
 
-export default interface Command {
+export interface Command {
   name: string;
   description: string;
   options: Option[];

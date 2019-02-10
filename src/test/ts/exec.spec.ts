@@ -1,18 +1,18 @@
 import {expect} from "chai";
 import "mocha";
-import {build, parse} from "../../../main/ts/main";
+import {build} from "../../main/ts/build";
+import {exec} from "../../main/ts/exec";
 
 interface CommitCommand {
+  all: boolean;
   message: string;
 }
 
-describe("parse", () => {
+describe("exec", () => {
   it("should parse arguments and run relevant action when matched", () => {
     const EXPECTED_MSG = "Hi";
 
-    let msg = "";
-
-    let args = `git commit -m ${EXPECTED_MSG}`.split(" ");
+    let args = `git commit -am ${EXPECTED_MSG}`.split(" ");
 
     let cli = build({
       commands: [
@@ -20,6 +20,12 @@ describe("parse", () => {
           name: "git commit",
           description: "Record changes to the repository",
           options: [
+            {
+              alias: "a",
+              name: "all",
+              description: "Tell the command to automatically stage files that have been modified and deleted, but new files you have not told Git about are not affected.",
+              type: Boolean,
+            },
             {
               alias: "m",
               name: "message",
@@ -29,14 +35,13 @@ describe("parse", () => {
             },
           ],
           action: (options: CommitCommand) => {
-            msg = options.message;
+            expect(options.message).to.equal(EXPECTED_MSG);
+            expect(options.all).to.equal(true);
           },
         },
       ],
     });
 
-    parse(args, cli);
-
-    expect(msg).to.equal(EXPECTED_MSG);
+    exec(args, cli);
   });
 });

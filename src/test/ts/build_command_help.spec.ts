@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import "mocha";
-import build_command_help from "../../../main/ts/build/build_command_help";
+import {build_command_help} from "../../main/ts/build_command_help";
 
 const normalise_terminal_text = (text: string) =>
   text

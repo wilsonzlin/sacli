@@ -1,7 +1,7 @@
-import CommandTreeNode from "../cmd/CommandTreeNode";
 import commandLineArgs = require("command-line-args");
+import {CommandTreeNode} from "./CommandTreeNode";
 
-export default function parse (provided: string[], command_tree: CommandTreeNode): void {
+export const exec = (provided: string[], command_tree: CommandTreeNode): void => {
   let option_args = provided.slice();
 
   let command_node = command_tree;
@@ -28,4 +28,4 @@ export default function parse (provided: string[], command_tree: CommandTreeNode
   }
 
   command.action(parsed_options);
-}
+};

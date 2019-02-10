@@ -1,8 +1,8 @@
-import CLI from "../cli/CLI";
-import CommandTreeNode from "../cmd/CommandTreeNode";
-import build_command_help from "./build_command_help";
+import {build_command_help} from "./build_command_help";
+import {CLI} from "./CLI";
+import {CommandTreeNode} from "./CommandTreeNode";
 
-export default function build (cli: CLI): CommandTreeNode {
+export const build = (cli: CLI): CommandTreeNode => {
   // Build a tree of commands
   let root_command = new CommandTreeNode();
   let nodes = [root_command];
@@ -58,4 +58,4 @@ export default function build (cli: CLI): CommandTreeNode {
   });
 
   return root_command;
-}
+};

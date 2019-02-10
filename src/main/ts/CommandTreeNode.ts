@@ -1,6 +1,6 @@
-import Command from "./Command";
+import {Command} from "./Command";
 
-export default class CommandTreeNode {
+export class CommandTreeNode {
   private command?: Command | undefined;
   private help?: string;
   private readonly subcommands: { [name: string]: CommandTreeNode };

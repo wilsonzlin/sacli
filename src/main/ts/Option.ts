@@ -1,4 +1,4 @@
-export default interface Option {
+export interface Option {
   alias: string;
   name: string;
   type: (input: string) => any;

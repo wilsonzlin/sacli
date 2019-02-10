@@ -1,14 +1,14 @@
-import Command from "../cmd/Command";
 import commandLineUsage = require("command-line-usage");
+import {Command} from "./Command";
 
-function build_command_help_header (cmd: Command, cliNamePrefix: string): commandLineUsage.Section {
+const build_command_help_header = (cmd: Command, cliNamePrefix: string): commandLineUsage.Section => {
   return {
     header: `${cliNamePrefix}${cmd.name}`,
     content: cmd.description,
   };
-}
+};
 
-function build_command_help_usage (cmd: Command, has_subcommands: boolean, cliNamePrefix: string): commandLineUsage.Section {
+const build_command_help_usage = (cmd: Command, has_subcommands: boolean, cliNamePrefix: string): commandLineUsage.Section => {
   let usage = [`{bold ${cliNamePrefix}${cmd.name} [command options...]}`];
   if (has_subcommands) {
     usage.push(`{bold ${cliNamePrefix}${cmd.name} <subcommand> [subcommand options...]}`);
@@ -18,9 +18,9 @@ function build_command_help_usage (cmd: Command, has_subcommands: boolean, cliNa
     header: "Usage",
     content: usage,
   };
-}
+};
 
-function build_command_help_subcommands (cmd: Command, subcommands: Command[], cliNamePrefix: string): commandLineUsage.Section[] {
+const build_command_help_subcommands = (cmd: Command, subcommands: Command[], cliNamePrefix: string): commandLineUsage.Section[] => {
   if (!subcommands.length) {
     return [];
   }
@@ -46,9 +46,9 @@ function build_command_help_subcommands (cmd: Command, subcommands: Command[], c
       content: subcommands_help,
     },
   ];
-}
+};
 
-function build_command_help_options (cmd: Command): commandLineUsage.Section {
+const build_command_help_options = (cmd: Command): commandLineUsage.Section => {
   return {
     header: "Options",
     optionList: [{
@@ -58,9 +58,9 @@ function build_command_help_options (cmd: Command): commandLineUsage.Section {
       description: "Print this help guide",
     }, ...cmd.options],
   };
-}
+};
 
-export default function build_command_help (cmd: Command, subcommands: Command[], cliName?: string | undefined): string {
+export const build_command_help = (cmd: Command, subcommands: Command[], cliName?: string | undefined): string => {
   let cliNamePrefix;
   if (cliName && cmd.name.length) {
     cliNamePrefix = cliName + " ";
@@ -78,4 +78,4 @@ export default function build_command_help (cmd: Command, subcommands: Command[]
   ];
 
   return commandLineUsage(help);
-}
+};
