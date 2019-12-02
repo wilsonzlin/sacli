@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>sacli builder</title>
+  </head>
+
+  <body>
+    <div id="builder">
+      <input id="name" placeholder="CLI name" autocomplete="off">
+      <div class="buttons">
+        <button name="add" value="template-command">Add command</button>
+      </div>
+      <div id="commands"></div>
+    </div>
+
+    <div id="preview">
+      <input id="test-command" placeholder="Test command..." autocomplete="off">
+      <div id="tty-output"></div>
+    </div>
+
+    <template id="template-command">
+      <div class="command">
+        <div class="buttons">
+          <button name="add" value="template-option">Add option</button>
+          <button name="move-up">Move up</button>
+          <button name="move-down">Move down</button>
+          <button name="delete">Delete</button>
+        </div>
+        <label>
+          <span>Name</span>
+          <input class="command-name">
+        </label>
+        <label>
+          <span>Description</span>
+          <textarea class="command-description"></textarea>
+        </label>
+        <h3>Options</h3>
+        <div class="command-options"></div>
+      </div>
+    </template>
+
+    <template id="template-option">
+      <div class="option">
+        <div class="buttons">
+          <button name="move-up">Move up</button>
+          <button name="move-down">Move down</button>
+          <button name="delete">Delete</button>
+        </div>
+        <label>
+          <span>Alias</span>
+          <input class="option-alias">
+        </label>
+        <label>
+          <span>Name</span>
+          <input class="option-name">
+        </label>
+        <label>
+          <span>Type</span>
+          <select class="option-type">
+            <option>String</option>
+            <option>Number</option>
+            <option>Boolean</option>
+          </select>
+        </label>
+        <label>
+          <span>Type label</span>
+          <input class="option-type-label">
+        </label>
+        <label>
+          <span>Description</span>
+          <input class="option-description">
+        </label>
+        <label>
+          <span>Multiple</span>
+          <input type="checkbox" class="option-multiple">
+        </label>
+        <label>
+          <span>Default option</span>
+          <input type="checkbox" class="option-default-option">
+        </label>
+      </div>
+    </template>
+  </body>
+</html>

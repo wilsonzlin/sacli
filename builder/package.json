@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "webpack-dev-server --config webpack.dev.js",
+    "build": "NODE_ENV=production npm run clean && mkdir dist && webpack --config webpack.prod.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "sacli": "^1.0.0"
+  },
+  "devDependencies": {
+    "css-loader": "^3.2.0",
+    "html-webpack-plugin": "^3.2.0",
+    "style-loader": "^1.0.1",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.9.0"
+  }
+}
