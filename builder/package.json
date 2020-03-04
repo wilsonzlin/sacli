@@ -6,7 +6,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "sacli": "^1.0.0"
+    "sacli": "file:.."
   },
   "devDependencies": {
     "css-loader": "^3.2.0",
