@@ -1,31 +1,25 @@
-import commandLineArgs = require("command-line-args");
-import {CommandTreeNode} from "./CommandTreeNode";
+import commandLineArgs = require('command-line-args');
+import {CommandTreeNode} from './CommandTreeNode';
 
-export const exec = (provided: string[], command_tree: CommandTreeNode): void => {
-  let option_args = provided.slice();
+export const exec = (provided: string[], commandTree: CommandTreeNode): void => {
+  const optionArgs = provided.slice();
 
-  let command_node = command_tree;
-
-  while (true) {
-    if (option_args.length && command_node.hasChild(option_args[0])) {
-      command_node = command_node.getChild(option_args.shift()!)!;
-    } else {
-      break;
-    }
+  let commandNode = commandTree;
+  while (optionArgs.length && commandNode.hasChild(optionArgs[0])) {
+    commandNode = commandNode.getChild(optionArgs.shift()!)!;
   }
 
-  if (!command_node.hasCommand()) {
-    throw new ReferenceError(`No suitable command found to execute "${provided.join(" ")}"`);
+  if (!commandNode.hasCommand()) {
+    throw new ReferenceError(`No suitable command found to execute "${provided.join(' ')}"`);
   }
 
-  let command = command_node.getCommand()!;
+  const command = commandNode.getCommand()!;
 
-  let parsed_options = commandLineArgs(command.options, {argv: option_args});
+  const parsedOptions = commandLineArgs(command.options, {argv: optionArgs});
 
-  if (parsed_options.help) {
-    console.log(command_node.getHelp() || "No help available");
-    return;
+  if (parsedOptions.help) {
+    console.log(commandNode.getHelp() || 'No help available');
+  } else {
+    command.action(parsedOptions);
   }
-
-  command.action(parsed_options);
 };

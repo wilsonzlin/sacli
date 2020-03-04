@@ -1,37 +1,40 @@
-import {build_command_help} from "./build_command_help";
-import {CLI} from "./CLI";
-import {CommandTreeNode} from "./CommandTreeNode";
+import {Command} from './Command';
+import {CommandTreeNode} from './CommandTreeNode';
+import {generateCommandHelp} from './help';
+
+export interface CLI {
+  name?: string;
+  commands: Command[];
+}
 
 export const build = (cli: CLI): CommandTreeNode => {
   // Build a tree of commands
-  let root_command = new CommandTreeNode();
-  let nodes = [root_command];
+  const rootCommand = new CommandTreeNode();
+  const nodes = [rootCommand];
 
-  for (let command of cli.commands) {
+  for (const command of cli.commands) {
     // Add `--help` option
     command.options = [...command.options, {
-      alias: "h",
-      name: "help",
-      description: "Print this usage guide",
+      alias: 'h',
+      name: 'help',
+      description: 'Print this usage guide',
       type: Boolean,
     }];
 
-    let command_name = command.name;
+    const commandName = command.name;
 
-    let components = command_name == "" ? [] : command_name.split(" ");
+    const components = commandName == '' ? [] : commandName.split(' ');
     if (components.length > 0 && !components.every(c => /^[^\s\0]+$/u.test(c))) {
-      throw new SyntaxError(`"${command_name}" is not a valid command name`);
+      throw new SyntaxError(`"${commandName}" is not a valid command name`);
     }
 
-    let node = root_command;
-    let component;
-    while (component = components.shift()) {
+    let node = rootCommand;
+    for (const component of components) {
       if (!node.hasChild(component)) {
-        let child = new CommandTreeNode();
+        const child = new CommandTreeNode();
         nodes.push(child);
         node.addChild(component, child);
       }
-
       node = node.getChild(component)!;
     }
 
@@ -39,23 +42,17 @@ export const build = (cli: CLI): CommandTreeNode => {
       node.setCommand(command);
     } catch (e) {
       if (e instanceof TypeError) {
-        throw new ReferenceError(`Duplicate command "${command_name}"`);
+        throw new ReferenceError(`Duplicate command "${commandName}"`);
       }
       throw e;
     }
   }
 
-  nodes.forEach(node => {
+  for (const node of nodes) {
     if (node.hasCommand()) {
-      node.setHelp(
-        build_command_help(
-          node.getCommand()!,
-          node.getSubcommands(),
-          cli.name,
-        )
-      );
+      node.setHelp(generateCommandHelp(node.getCommand()!, node.getSubcommands(), cli.name));
     }
-  });
+  }
 
-  return root_command;
+  return rootCommand;
 };

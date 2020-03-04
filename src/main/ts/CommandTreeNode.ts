@@ -1,4 +1,4 @@
-import {Command} from "./Command";
+import {Command} from './Command';
 
 export class CommandTreeNode {
   private command?: Command | undefined;
@@ -9,8 +9,8 @@ export class CommandTreeNode {
     this.subcommands = Object.create(null);
   }
 
-  getChild (name: string): CommandTreeNode | null {
-    return this.subcommands[name] || null;
+  getChild (name: string): CommandTreeNode | undefined {
+    return this.subcommands[name];
   }
 
   hasChild (name: string): boolean {
@@ -24,10 +24,6 @@ export class CommandTreeNode {
     this.subcommands[name] = node;
   }
 
-  hasSubcommands (): boolean {
-    return Object.keys(this.subcommands).length > 0;
-  }
-
   getSubcommands (): Command[] {
     return Object.keys(this.subcommands)
       .map(scn => this.subcommands[scn].command!)
@@ -38,22 +34,18 @@ export class CommandTreeNode {
     return !!this.command;
   }
 
-  getCommand (): Command | null {
-    return this.command || null;
+  getCommand (): Command | undefined {
+    return this.command;
   }
 
   setCommand (command: Command): void {
     if (this.command) {
-      throw new TypeError(`A command already exists`);
+      throw new TypeError('A command already exists');
     }
     this.command = command;
   }
 
-  getHelp (): string | null {
-    // Don't use || shortcut as help could be empty string
-    if (this.help == undefined) {
-      return null;
-    }
+  getHelp (): string | undefined {
     return this.help;
   }
 

@@ -4,132 +4,94 @@ Easy declarative CLI builder for Node.js applications. Built on top of [command-
 
 ## Features
 
-## Examples
+- Supports multiple subcommands at any depth.
+- Automatically generate nicely formatted documentation for commands.
+- Simple declarative API that uses plain JavaScript objects and functions.
 
-### Simple
+## Get
 
-```typescript
-import {build, exec} from "sacli";
+Add it to your `package.json`:
 
-interface CalculateCommand {
-  mode: string;
-  values: number[];
-}
-
-const cli = build({
-  name: "calc",
-  commands: [
-    {
-      name: "",
-      description: "",
-      options: [
-        {
-          alias: "m",
-          name: "mode",
-          description: "One of +, -, *, or /.",
-          type: String,
-          typeLabel: "<+|-|*|/>",
-        },
-        {
-          alias: "v",
-          name: "values",
-          description: "Operands",
-          type: Number,
-          typeLabel: "<operands...>",
-          defaultOption: true,
-          multiple: true,
-        },
-      ],
-      action: (options: CalculateCommand) => {
-        const reducer = {
-          "+": (t, c) => t + c,
-          "-": (t, c) => t - c,
-          "*": (t, c) => t * c,
-          "/": (t, c) => t / c,
-        }[options.mode];
-        console.log(options.values.reduce(reducer));
-      },
-    },
-  ],
-});
-
-exec(process.argv.slice(2), cli);
+```bash
+npm i sacli
 ```
 
-### Advanced
+## Usage
+
+There are two simple parts: building the CLI and using it.
+
+### Building
+
+A CLI has one or more commands, which is identified by the arguments immediately following the program. For example, given a program `video`:
+
+- `video` opens a file manager for a video collection.
+- `video download` downloads a URL as a file to disk.
+- `video convert` converts a video to another format.
+- `video convert audio` converts a video to an audio file.
+
+We can represent this in sacli using the `CLI` and `Command` types:
 
 ```typescript
-import {build, exec} from "sacli";
+import * as sacli from 'sacli';
 
-interface BranchCommand {
-  delete: boolean;
-  branch: string;
-}
+const OpenCommand: sacli.Command = { name: '', ... };
+const DownloadCommand: sacli.Command = { name: 'download', ... };
+const ConvertCommand: sacli.Command = { name: 'convert', ... };
+const ConvertAudioCommand: sacli.Command = { name: 'convert audio', ... };
 
-interface CommitCommand {
-  all: boolean;
-  message: string;
-  files: string[];
-}
-
-const cli = build({
-  name: "git",
+const cli = sacli.build({
+  name: 'video',
   commands: [
-    {
-      name: "branch",
-      description: "List, create, or delete branches",
-      options: [
-        {
-          alias: "d",
-          name: "delete",
-          description: "Delete the branch.",
-          type: Boolean,
-        },
-        {
-          alias: "b",
-          name: "branch",
-          description: "Branch to operate on.",
-          type: String,
-          typeLabel: "<branch>",
-          defaultOption: true,
-        },
-      ],
-      action: (options: BranchCommand) => {
-        console.log(`Branch ${options.branch}`);
-      },
-    },
-    {
-      name: "commit",
-      description: "Record changes to the repository",
-      options: [
-        {
-          alias: "a",
-          name: "all",
-          description: "Add all files.",
-          type: Boolean,
-        },
-        {
-          alias: "m",
-          name: "message",
-          description: "Use the given <msg> as the commit message.",
-          type: String,
-          typeLabel: "<msg>",
-        },
-        {
-          alias: "f",
-          name: "files",
-          description: "Commit the contents of the files without recording the changes already staged.",
-          type: String,
-          multiple: true,
-          defaultOption: true,
-        }
-      ],
-      action: (options: CommitCommand) => {
-        console.log(`git commit -${options.all ? "a" : ""}m ${options.message} ${options.files.join(" ")}`);
-      },
-    },
-  ],
+    OpenCommand,
+    DownloadCommand,
+    ConvertCommand,
+    ConvertAudioCommand,
+  ], 
 });
-
-exec(process.argv.slice(2), cli);
 ```
+
+Each command takes four properties:
+
+```typescript
+const DownloadCommand: sacli.Command = {
+  name: 'download',
+  description: 'Save a video to disk from a URL',
+  options: [URLsOption],
+  action: (download: ParsedDownloadArgs) => ...,
+};
+```
+
+The **description** is used when showing help for the command. When parsing user-provided arguments, sacli will call **action** with an object built by matching user-provided argument values to options specified in the **options** array. An option has the form:
+
+```typescript
+const URLsOption: sacli.Option = {
+  // A single-character alternative option specifier that allows the user to specify `-u` instead of `--urls`.
+  alias: 'u',
+  // How the option is referenced in arguments and what property name to map the value to in the resulting parsed object.
+  name: 'urls',
+  // Value type. Takes a function that receives a string and returns any value.
+  type: String,
+  // What to show as this option's value in the command help.
+  typeLabel: '<URL>',
+  // Shown in the command help for this option.
+  description: 'URLs to download',
+  // Allows multiple values in the form of `--urls a b c` or `--urls a --urls b --urls c`
+  multiple: true,
+  // Values not mapped to a specific option will be mapped to this one e.g. `video a b c`.
+  defaultOption: true,
+};
+```
+
+All commands have autogenerated help which can be shown by using `-h` e.g. `video download -h`.
+
+### Executing
+
+The CLI can be used to parse user-provided arguments and execute a command's action using **exec**:
+
+```typescript
+import * as sacli from 'sacli';
+
+sacli.exec(['video', 'download', '--urls', 'https://abc.xyz/video1.mp4', 'https://tenfour.com/43726.mp4'], cli);
+```
+
+sacli will attempt to find the appropriate subcommand by finding one that matches the most initial argument values. For example, `video upload` will match the `video` command, while `video convert video` will match the `video convert` command.
