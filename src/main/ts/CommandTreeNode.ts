@@ -1,13 +1,9 @@
 import {Command} from './Command';
 
 export class CommandTreeNode {
-  private command?: Command | undefined;
+  private command?: Command;
   private help?: string;
-  private readonly subcommands: { [name: string]: CommandTreeNode };
-
-  constructor () {
-    this.subcommands = Object.create(null);
-  }
+  private readonly subcommands: { [name: string]: CommandTreeNode } = Object.create(null);
 
   getChild (name: string): CommandTreeNode | undefined {
     return this.subcommands[name];

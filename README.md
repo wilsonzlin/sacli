@@ -91,7 +91,7 @@ The CLI can be used to parse user-provided arguments and execute a command's act
 ```typescript
 import * as sacli from 'sacli';
 
-sacli.exec(['video', 'download', '--urls', 'https://abc.xyz/video1.mp4', 'https://tenfour.com/43726.mp4'], cli);
+sacli.exec(['download', '--urls', 'https://abc.xyz/video1.mp4', 'https://tenfour.com/43726.mp4'], cli);
 ```
 
-sacli will attempt to find the appropriate subcommand by finding one that matches the most initial argument values. For example, `video upload` will match the `video` command, while `video convert video` will match the `video convert` command.
+sacli will attempt to find the appropriate subcommand by finding one that matches the most initial argument values. For example, `upload` will match the `` command, while `convert video` will match the `convert` command.
