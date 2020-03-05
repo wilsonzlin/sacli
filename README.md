@@ -95,3 +95,7 @@ sacli.exec(['download', '--urls', 'https://abc.xyz/video1.mp4', 'https://tenfour
 sacli will attempt to find the appropriate subcommand by finding one that matches the most initial argument values. For example, `upload` will match the empty prefix command, while `convert video` will match the `convert` command.
 
 If arguments are provided from `process.argv`, remember to remove the first two elements, which are the Node.js executable and script paths respectively.
+
+## Builder
+
+A GUI web app for building and experimenting with a CLI can be found in [builder](./builder/), which can also be [accessed from a browser](https://wilsonl.in/sacli/).
