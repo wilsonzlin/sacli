@@ -12,9 +12,10 @@
   },
   "scripts": {
     "build": "npm run clean && tsc",
-    "test": "mocha -r ts-node/register src/test/**/*.spec.ts",
-    "prepublishOnly": "npm run test && npm run build",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "format": "prettier --write 'src/**/*.ts'",
+    "prepublishOnly": "prettier --check 'src/**/*.ts' && npm run test && npm run build",
+    "test": "jest"
   },
   "keywords": [
     "cli",
@@ -30,7 +31,7 @@
     "parameters"
   ],
   "author": {
-    "email": "contact@wilsonl.in",
+    "email": "npm@wilsonl.in",
     "name": "Wilson Lin",
     "url": "https://wilsonl.in/"
   },
@@ -39,21 +40,14 @@
     "url": "https://github.com/wilsonzlin/sacli/issues"
   },
   "homepage": "https://github.com/wilsonzlin/sacli#readme",
-  "dependencies": {
-    "command-line-args": "^5.0.2",
-    "command-line-usage": "^5.0.5"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/chai": "^4.1.4",
-    "@types/chai-as-promised": "^7.1.0",
-    "@types/command-line-args": "^5.0.0",
-    "@types/command-line-usage": "^5.0.1",
-    "@types/mocha": "^5.2.4",
-    "@types/node": "^10.5.2",
-    "chai": "^4.1.2",
-    "chai-as-promised": "^7.1.1",
-    "mocha": "^5.2.0",
-    "ts-node": "^7.0.0",
-    "typescript": "^2.9.2"
+    "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.28",
+    "jest": "^26.6.3",
+    "prettier": "^2.2.1",
+    "ts-jest": "^26.5.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5"
   }
 }
