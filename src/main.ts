@@ -1,25 +1,39 @@
 type OptionOpts = { alias?: string; description?: string; default?: boolean };
 
 const assertValidName = (name: string) => {
-  if (!/^[a-zA-Z0-9]+$/.test(name)) {
-    throw new SyntaxError(`"${name}" is not a valid option or command name`);
+  if (!/^[a-zA-Z0-9]{2,}$/.test(name)) {
+    throw new SyntaxError(
+      `"${name}" is not a valid option or command name:\n  - at least two characters\n  - only alphanumerical characters`
+    );
+  }
+};
+
+const assertValidAlias = (alias: string) => {
+  if (!/^[a-zA-Z0-9]$/.test(alias)) {
+    throw new SyntaxError(
+      `"${alias}" is not a valid option alias:\n  - one alphanumerical character`
+    );
   }
 };
 
 export class SacliParseError extends Error {}
 
+type InternalOption = {
+  name: string;
+  alias?: string;
+  description?: string;
+  boolean?: boolean;
+  type: (raw: string) => any;
+  mode: "optional" | "required" | "repeated";
+  default?: boolean;
+};
+
 export class Command<Parsed extends { [name: string]: any }> {
-  private readonly options: {
-    [name: string]: {
-      alias?: string;
-      description?: string;
-      boolean?: boolean;
-      type: (raw: string) => any;
-      mode: "optional" | "required" | "repeated";
-      default?: boolean;
-    };
+  private readonly optionsLookup: {
+    [nameOrAlias: string]: InternalOption;
   } = Object.create(null);
-  private defaultOpt: string | undefined;
+  private readonly options: InternalOption[] = [];
+  private defaultOpt: InternalOption | undefined;
   private readonly subcommands = new Map<string, Command<any>>();
   private _action: ((args: any) => void) | undefined;
 
@@ -43,16 +57,36 @@ export class Command<Parsed extends { [name: string]: any }> {
     return cmd as any;
   }
 
-  private assertSetDefault(name: string) {
-    if (this.defaultOpt) {
-      throw new ReferenceError("This command already has a default option");
+  private addOption(opt: {
+    name: string;
+    alias?: string;
+    description?: string;
+    boolean?: boolean;
+    type: (raw: string) => any;
+    mode: "optional" | "required" | "repeated";
+    default?: boolean;
+  }) {
+    this.options.push(opt);
+
+    assertValidName(opt.name);
+    this.optionsLookup[opt.name] = opt;
+
+    if (opt.alias !== undefined) {
+      assertValidAlias(opt.alias);
+      this.optionsLookup[opt.alias] = opt;
     }
-    if (this.subcommands.size) {
-      throw new SyntaxError(
-        "This command accepts subcommands, so cannot have any default options"
-      );
+
+    if (opt.default) {
+      if (this.defaultOpt) {
+        throw new ReferenceError("This command already has a default option");
+      }
+      if (this.subcommands.size) {
+        throw new SyntaxError(
+          "This command accepts subcommands, so cannot have any default options"
+        );
+      }
+      this.defaultOpt = opt;
     }
-    this.defaultOpt = name;
   }
 
   boolean<N extends string>(
@@ -64,13 +98,13 @@ export class Command<Parsed extends { [name: string]: any }> {
         [name in N]: boolean;
       }
   > {
-    assertValidName(name);
-    this.options[name] = {
+    this.addOption({
       ...opts,
+      name,
       type: () => true,
       boolean: true,
       mode: "optional",
-    };
+    });
     return this;
   }
 
@@ -84,11 +118,12 @@ export class Command<Parsed extends { [name: string]: any }> {
         [name in N]: T | undefined;
       }
   > {
-    assertValidName(name);
-    if (opts?.default) {
-      this.assertSetDefault(name);
-    }
-    this.options[name] = { ...opts, type, mode: "optional" };
+    this.addOption({
+      ...opts,
+      name,
+      type,
+      mode: "optional",
+    });
     return this;
   }
 
@@ -102,11 +137,12 @@ export class Command<Parsed extends { [name: string]: any }> {
         [name in N]: T;
       }
   > {
-    assertValidName(name);
-    if (opts?.default) {
-      this.assertSetDefault(name);
-    }
-    this.options[name] = { ...opts, type, mode: "required" };
+    this.addOption({
+      ...opts,
+      name,
+      type,
+      mode: "required",
+    });
     return this;
   }
 
@@ -120,11 +156,12 @@ export class Command<Parsed extends { [name: string]: any }> {
         [name in N]: T[];
       }
   > {
-    assertValidName(name);
-    if (opts?.default) {
-      this.assertSetDefault(name);
-    }
-    this.options[name] = { ...opts, type, mode: "repeated" };
+    this.addOption({
+      ...opts,
+      name,
+      type,
+      mode: "repeated",
+    });
     return this;
   }
 
@@ -135,15 +172,27 @@ export class Command<Parsed extends { [name: string]: any }> {
 
   private _eval(parsed: any, args: string[]): void {
     // Parse own options first.
-    while (args[0]?.startsWith("--")) {
-      const name = args.shift()!.slice(2);
-      if (!name) {
+    while (args[0]?.startsWith("-")) {
+      const arg = args.shift()!;
+      let nameOrAlias: string;
+      if (arg.startsWith("--")) {
+        nameOrAlias = arg.slice(2);
+      } else {
+        nameOrAlias = arg.slice(1);
+        if (nameOrAlias.length !== 1) {
+          throw new SacliParseError(
+            "Alias option is longer than one character"
+          );
+        }
+      }
+      if (!nameOrAlias) {
         continue;
       }
-      const opt = this.options[name];
+      const opt = this.optionsLookup[nameOrAlias];
       if (!opt) {
-        throw new SacliParseError(`Unrecognised option "${name}"`);
+        throw new SacliParseError(`Unrecognised option "${nameOrAlias}"`);
       }
+      const name = opt.name;
       const repeated = opt.mode === "repeated";
       let value: any = repeated ? [] : undefined;
       if (opt.boolean) {
@@ -164,18 +213,19 @@ export class Command<Parsed extends { [name: string]: any }> {
       parsed[name] = value;
     }
     if (args.length && this.defaultOpt) {
-      const opt = this.options[this.defaultOpt];
+      const opt = this.defaultOpt;
       let value: any;
       if (opt.mode === "repeated") {
         value = args.splice(0).map((v) => opt.type(v));
       } else {
         value = opt.type(args.shift()!);
       }
-      parsed[this.defaultOpt] = value;
+      parsed[opt.name] = value;
     }
 
     // Validate own options.
-    for (const [name, opt] of Object.entries(this.options)) {
+    for (const opt of this.options) {
+      const name = opt.name;
       const found = Object.prototype.hasOwnProperty.call(parsed, name);
       if (!found) {
         if (opt.boolean) {
