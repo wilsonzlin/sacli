@@ -83,11 +83,11 @@ export class Command<Parsed extends { [name: string]: any }> {
   private printHelp() {
     const width = process.stderr.columns;
     const f = (code: number, msg: string) =>
-      width ? `\x1e[${code}m${msg}\x1e[0m` : "";
+      width ? `\x1b[${code}m${msg}\x1b[0m` : "";
     console.error(f(1, this.path.join(" ")));
     console.error(indented(wrapText(this.description ?? "", width - 2), 2));
     console.error();
-    console.error(f(3, "OPTIONS"));
+    console.error(f(3, "Options"));
     const options = this.options
       .slice()
       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
