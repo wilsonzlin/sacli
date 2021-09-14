@@ -30,22 +30,38 @@ type InternalOption = {
   default?: boolean;
 };
 
-const wrapText = (text: string, maxLen: number) => {
-  if (maxLen < 5) {
+// Export for tests.
+export const wrapText = (text: string, maxLen: number) => {
+  text = text.trim();
+  if (isNaN(maxLen) || maxLen < 5) {
     return [text];
   }
   const lines = [];
   let i = 0;
   while (i < text.length) {
-    let j = Math.min(text.length - 1, i + maxLen);
-    if (!/\s/u.test(text[j])) {
+    let j = i + maxLen;
+    if (j >= text.length) {
+      lines.push(text.slice(i));
+      break;
+    }
+    const charAfter = text[j];
+    if (!/\s/.test(charAfter)) {
       j--;
+      while (i < j && /\W/.test(charAfter) && text[j] == charAfter) {
+        j--;
+      }
       while (i < j && /\w/.test(text[j])) {
         j--;
+      }
+      if (i == j) {
+        j = i + maxLen - 1;
       }
     }
     lines.push(text.slice(i, j + 1).trim());
     i = j + 1;
+    while (i < text.length && /\s/.test(text[i])) {
+      i++;
+    }
   }
   return lines;
 };
@@ -87,7 +103,7 @@ export class Command<Parsed extends { [name: string]: any }> {
     console.error(f(1, this.path.join(" ")));
     console.error(indented(wrapText(this.description ?? "", width - 2), 2));
     console.error();
-    console.error(f(3, "Options"));
+    console.error(f(4, "Options"));
     const options = this.options
       .slice()
       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
