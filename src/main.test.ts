@@ -1,7 +1,7 @@
 import { Command } from "./main";
 
 test("types work correctly", () => {
-  const git = Command.new()
+  const git = Command.new("git")
     .optional("dir", String)
     .required("id", Number)
     .repeated("flags", String);

@@ -1,3 +1,5 @@
+import { EOL } from "os";
+
 type OptionOpts = { alias?: string; description?: string; default?: boolean };
 
 const assertValidName = (name: string) => {
@@ -28,23 +30,82 @@ type InternalOption = {
   default?: boolean;
 };
 
+const wrapText = (text: string, maxLen: number) => {
+  if (maxLen < 5) {
+    return [text];
+  }
+  const lines = [];
+  let i = 0;
+  while (i < text.length) {
+    let j = Math.min(text.length - 1, i + maxLen);
+    if (!/\s/u.test(text[j])) {
+      j--;
+      while (i < j && /\w/.test(text[j])) {
+        j--;
+      }
+    }
+    lines.push(text.slice(i, j + 1).trim());
+    i = j + 1;
+  }
+  return lines;
+};
+
+const indented = (lines: string[], indent: number) =>
+  lines.map((l) => " ".repeat(indent) + l).join(EOL);
+
 export class Command<Parsed extends { [name: string]: any }> {
-  private readonly optionsLookup: {
-    [nameOrAlias: string]: InternalOption;
+  private readonly optionByName: {
+    [name: string]: InternalOption;
   } = Object.create(null);
+  private readonly optionByAlias: {
+    [alias: string]: InternalOption;
+  } = Object.create(null);
+  // We can't just use optionsLookup as it duplicates an option if it has an alias.
   private readonly options: InternalOption[] = [];
   private defaultOpt: InternalOption | undefined;
   private readonly subcommands = new Map<string, Command<any>>();
   private _action: ((args: any) => void) | undefined;
 
-  private constructor() {}
+  private constructor(
+    private readonly parent: Command<any> | undefined,
+    private readonly name: string,
+    private readonly description: string | undefined
+  ) {}
 
-  public static new(): Command<{}> {
-    return new Command();
+  public static new(name: string, description?: string): Command<{}> {
+    return new Command(undefined, name, description);
   }
 
-  subcommand(name: string): Command<Parsed> {
-    const cmd = new Command();
+  private get path(): string[] {
+    return [...(this.parent?.path ?? []), this.name];
+  }
+
+  private printHelp() {
+    const width = process.stderr.columns;
+    const f = (code: number, msg: string) =>
+      width ? `\x1e[${code}m${msg}\x1e[0m` : "";
+    console.error(f(1, this.path.join(" ")));
+    console.error(indented(wrapText(this.description ?? "", width - 2), 2));
+    console.error();
+    console.error(f(3, "OPTIONS"));
+    const options = this.options
+      .slice()
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    for (const option of options) {
+      console.error(
+        [
+          "  ",
+          f(1, `--${option.name}`),
+          option.alias && f(2, `--${option.alias}`),
+        ].join("")
+      );
+      console.error(indented(wrapText(option.description ?? "", width - 4), 4));
+      console.error();
+    }
+  }
+
+  subcommand(name: string, description?: string): Command<Parsed> {
+    const cmd = new Command(this, name, description);
     if (this.defaultOpt) {
       throw new TypeError(
         "Base command accepts default options, so cannot have any subcommands"
@@ -69,11 +130,11 @@ export class Command<Parsed extends { [name: string]: any }> {
     this.options.push(opt);
 
     assertValidName(opt.name);
-    this.optionsLookup[opt.name] = opt;
+    this.optionByName[opt.name] = opt;
 
     if (opt.alias !== undefined) {
       assertValidAlias(opt.alias);
-      this.optionsLookup[opt.alias] = opt;
+      this.optionByAlias[opt.alias] = opt;
     }
 
     if (opt.default) {
@@ -93,10 +154,9 @@ export class Command<Parsed extends { [name: string]: any }> {
     name: N,
     opts: Omit<OptionOpts, "default"> = {}
   ): Command<
-    Parsed &
-      {
-        [name in N]: boolean;
-      }
+    Parsed & {
+      [name in N]: boolean;
+    }
   > {
     this.addOption({
       ...opts,
@@ -113,10 +173,9 @@ export class Command<Parsed extends { [name: string]: any }> {
     type: (raw: string) => T,
     opts: OptionOpts = {}
   ): Command<
-    Parsed &
-      {
-        [name in N]: T | undefined;
-      }
+    Parsed & {
+      [name in N]: T | undefined;
+    }
   > {
     this.addOption({
       ...opts,
@@ -132,10 +191,9 @@ export class Command<Parsed extends { [name: string]: any }> {
     type: (raw: string) => T,
     opts: OptionOpts = {}
   ): Command<
-    Parsed &
-      {
-        [name in N]: T;
-      }
+    Parsed & {
+      [name in N]: T;
+    }
   > {
     this.addOption({
       ...opts,
@@ -151,10 +209,9 @@ export class Command<Parsed extends { [name: string]: any }> {
     type: (raw: string) => T,
     opts: OptionOpts = {}
   ): Command<
-    Parsed &
-      {
-        [name in N]: T[];
-      }
+    Parsed & {
+      [name in N]: T[];
+    }
   > {
     this.addOption({
       ...opts,
@@ -174,23 +231,30 @@ export class Command<Parsed extends { [name: string]: any }> {
     // Parse own options first.
     while (args[0]?.startsWith("-")) {
       const arg = args.shift()!;
-      let nameOrAlias: string;
+      let opt: InternalOption;
       if (arg.startsWith("--")) {
-        nameOrAlias = arg.slice(2);
-      } else {
-        nameOrAlias = arg.slice(1);
-        if (nameOrAlias.length !== 1) {
-          throw new SacliParseError(
-            "Alias option is longer than one character"
-          );
+        const name = arg.slice(2);
+        if (!name) {
+          break;
         }
-      }
-      if (!nameOrAlias) {
-        continue;
-      }
-      const opt = this.optionsLookup[nameOrAlias];
-      if (!opt) {
-        throw new SacliParseError(`Unrecognised option "${nameOrAlias}"`);
+        opt = this.optionByName[name];
+        if (!opt) {
+          if (name == "help") {
+            this.printHelp();
+            return;
+          }
+          throw new SacliParseError(`Unrecognised option "${name}"`);
+        }
+      } else {
+        const alias = arg.slice(1);
+        opt = this.optionByAlias[alias];
+        if (!opt) {
+          if (alias == "h") {
+            this.printHelp();
+            return;
+          }
+          throw new SacliParseError(`Unrecognised short option "${alias}"`);
+        }
       }
       const name = opt.name;
       const repeated = opt.mode === "repeated";
@@ -198,7 +262,11 @@ export class Command<Parsed extends { [name: string]: any }> {
       if (opt.boolean) {
         value = true;
       } else {
-        while (args.length && !args[0].startsWith("--")) {
+        while (
+          args.length &&
+          !args[0].startsWith("--") &&
+          !args[0].startsWith("-")
+        ) {
           const v = args.shift()!;
           if (!repeated) {
             value = opt.type(v);
@@ -240,15 +308,15 @@ export class Command<Parsed extends { [name: string]: any }> {
 
     // Parse remaining arguments.
     if (args.length) {
+      const extraArg = args.shift()!;
       if (this.subcommands.size) {
-        const subcmdName = args.shift()!;
-        const subcmd = this.subcommands.get(subcmdName);
+        const subcmd = this.subcommands.get(extraArg);
         if (!subcmd) {
-          throw new SacliParseError(`Unrecognised subcommand "${subcmdName}"`);
+          throw new SacliParseError(`Unrecognised subcommand "${extraArg}"`);
         }
         subcmd._eval(parsed, args);
       } else {
-        throw new SacliParseError(`Unrecognised extra argument "${args[0]}"`);
+        throw new SacliParseError(`Unrecognised extra argument "${extraArg}"`);
       }
     } else {
       const action = this._action;
