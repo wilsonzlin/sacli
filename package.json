@@ -1,6 +1,6 @@
 {
   "name": "sacli",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Elegant type-safe CLI builder for Node.js",
   "main": "dist/main.js",
   "files": [
