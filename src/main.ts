@@ -103,20 +103,32 @@ export class Command<Parsed extends { [name: string]: any }> {
     console.error(f(1, this.path.join(" ")));
     console.error(indented(wrapText(this.description ?? "", width - 2), 2));
     console.error();
-    console.error(f(4, "Options"));
+    if (this.subcommands.size) {
+      console.error(f(4, "Subcommands"));
+      for (const cmd of this.subcommands.values()) {
+        console.error(`  ${f(1, cmd.name)}`);
+        console.error(indented(wrapText(cmd.description ?? "", width - 4), 4));
+        console.error();
+      }
+    }
     const options = this.options
       .slice()
       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-    for (const option of options) {
-      console.error(
-        [
-          "  ",
-          f(1, `--${option.name}`),
-          option.alias && f(2, `--${option.alias}`),
-        ].join("")
-      );
-      console.error(indented(wrapText(option.description ?? "", width - 4), 4));
-      console.error();
+    if (options.length) {
+      console.error(f(4, "Options"));
+      for (const option of options) {
+        console.error(
+          [
+            "  ",
+            f(1, `--${option.name}`),
+            option.alias && f(2, `--${option.alias}`),
+          ].join("")
+        );
+        console.error(
+          indented(wrapText(option.description ?? "", width - 4), 4)
+        );
+        console.error();
+      }
     }
   }
 
