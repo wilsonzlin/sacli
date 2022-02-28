@@ -288,10 +288,7 @@ export class Command<Parsed extends { [name: string]: any }> {
       if (opt.boolean) {
         value = true;
       } else {
-        while (
-          args.length &&
-          !RE.test(args[0])
-        ) {
+        while (args.length && !RE.test(args[0])) {
           const v = args.shift()!;
           if (!repeated) {
             value = opt.type(v);
