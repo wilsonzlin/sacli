@@ -256,13 +256,16 @@ export class Command<Parsed extends { [name: string]: any }> {
   }
 
   private _eval(parsed: any, args: string[]): void {
-    const RE = /^(-[a-zA-Z0-9]$|--\S)/;
+    const RE = /^(-[a-zA-Z0-9]$|--)/;
     // Parse own options first.
     while (RE.test(args[0] ?? "")) {
       const arg = args.shift()!;
       let opt: InternalOption;
       if (arg.startsWith("--")) {
         const name = arg.slice(2);
+        if (!name) {
+          break;
+        }
         opt = this.optionByName[name];
         if (!opt) {
           if (name == "help") {
